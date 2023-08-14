@@ -352,11 +352,11 @@ table tr {
     -webkit-transition: background 0.3s, box-shadow 0.3s;
     -moz-transition: background 0.3s, box-shadow 0.3s;
     transition: background 0.3s, box-shadow 0.3s;
-    background: #6819da;
+    /* background: #6819da; */
     position: relative;
 }
 
-table tr.current-user {
+/* table tr.current-user {
     animation: glowing 3000ms infinite;
     z-index: 1;
 }
@@ -377,12 +377,12 @@ table tr.current-user {
     100% {
         box-shadow: 0 0 5px #ffffff;
     }
-}
+} */
 
-table tr:hover {
+/* table tr:hover {
     background: rgba(98, 66, 156, 0.062);
     box-shadow: inset 0 -1px rgba(0, 0, 0, 0.25), inset 0 1px rgba(0, 0, 0, 0.25);
-}
+} */
 
 table {
     width: 100%;

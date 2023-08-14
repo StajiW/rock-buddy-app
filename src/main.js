@@ -156,9 +156,9 @@ function getRocksmithProfiles(steamUserDataPath, steamProfile) {
 
 function getRocksnifferPath() {
     let rocksnifferPath = 'RockSniffer';
-    if (isDev) {
-        rocksnifferPath = 'RockSniffer/RockSniffer/bin/x64/Release/net6.0-windows';
-    }
+    // if (isDev) {
+    //     rocksnifferPath = 'RockSniffer/RockSniffer/bin/x64/Release/net6.0-windows';
+    // }
 
     return rocksnifferPath;
 }
