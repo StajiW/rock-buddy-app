@@ -6,12 +6,13 @@ const rockSniffer = RockSniffer.instance
 rockSniffer.on('songChange', (songData: SongData) => {
     console.log(`song change: ${songData.title}`)
 })
-rockSniffer.start()
+// rockSniffer.start()
 </script>
 
 <template>
 <div id='content'>
-    <router-view />
+<!-- <Login /> -->
+<router-view />
 </div>
 </template>
 

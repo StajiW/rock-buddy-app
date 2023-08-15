@@ -4,18 +4,24 @@ import { BadResponseError, UnexpectedError } from '../scripts/errors'
 import Store from '../scripts/store'
 import { alert } from '../scripts/util'
 import TextInput from '../components/TextInput.vue'
+// import fetch from 'electron-fetch'
 
 let usernameOrEmail: string
 let password: string
 const store = Store.instance
 
-async function generateAuthData(usernameOrEmail: string, password: string): Promise<Response> {
+async function generateAuthData(usernameOrEmail: string, password: string): Promise<void> {
     const host = getHost()
+    console.log('y')
     const response = await fetch(host + '/api/auth/login.php', {
         method: 'POST',
-        headers: {
+        body: JSON.stringify({
             username_or_email: usernameOrEmail,
-            password: password
+            password: password,
+            version: '1.1.10'
+        }),
+        headers: {
+            'Content-Type': 'application/json'
         }
     })
 
@@ -23,7 +29,7 @@ async function generateAuthData(usernameOrEmail: string, password: string): Prom
         throw new BadResponseError(response['error'] as (string | undefined))
     }
 
-    return response
+    // return response
 }
 
 async function login(): Promise<void> {

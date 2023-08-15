@@ -1,6 +1,8 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
+import ElectronStore from 'electron-store'
+ElectronStore.initRenderer()
 
 // The built directory structure
 //
@@ -51,6 +53,7 @@ async function createWindow() {
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
       nodeIntegration: true,
       contextIsolation: false,
+      webSecurity: false
     },
   })
 
