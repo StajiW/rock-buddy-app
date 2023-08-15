@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import Login from './pages/Login.vue'
+import RockSniffer, { SongData } from './scripts/rocksniffer'
+
+const rockSniffer = RockSniffer.instance
+rockSniffer.on('songChange', (songData: SongData) => {
+    console.log(`song change: ${songData.title}`)
+})
+rockSniffer.start()
 </script>
 
 <template>

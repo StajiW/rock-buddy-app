@@ -6,3 +6,16 @@
     font-size: 2rem;
     margin-bottom: 2rem;
 }
+
+.Button {
+    display: inline-block;
+    padding: .5rem;
+    
+    color: #222222;
+
+    background-color: #DDDDDD;
+    border-radius: .25rem;
+
+    user-select: none;
+    cursor: pointer;
+}
