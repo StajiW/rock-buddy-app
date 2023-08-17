@@ -36,7 +36,7 @@ export type SongData = {
 
 export default class RockSniffer {
     private static _instance: RockSniffer
-    private callbacks: { [ key: string ]: (...args: any[]) => any } = {}
+    private callbacks: { [ key: string ]: ((...args: any[]) => any)[] } = {}
     private sniffInterval?: number
     private songData?: SongData
     private scoreData?: ScoreData
@@ -50,8 +50,8 @@ export default class RockSniffer {
         return this._instance
     }
 
-    public on(trigger: string, callback: (...args: any[]) => any) {
-        this.callbacks[trigger] = callback
+    public on(id: string, callback: (...args: any[]) => any) {
+        this.callbacks[id] ? this.callbacks[id].push(callback) : this.callbacks[id] = [callback]
     }
 
     public start(): void {
@@ -69,13 +69,14 @@ export default class RockSniffer {
         const memoryReadout = json.memoryReadout
         const songDetails = json.songDetails
 
+        if (memoryReadout === null) return
+        if (songDetails === null) return
+
         this.updateGameData(memoryReadout)
 
         if (songDetails.songID !== undefined && songDetails.songID !== this.songData?.key) {
             this.updateSongData(songDetails)
-            if (this.callbacks.songChange !== undefined) {
-                this.callbacks.songChange(this.songData)
-            }
+            this.callback('songChange', this.songData)
         }
 
         if (this.isInSong()) {
@@ -85,14 +86,19 @@ export default class RockSniffer {
 
         if (this.inSong) {
             this.updateScoreData(memoryReadout)
-            if (this.callbacks.gameUpdate !== undefined) {
-                this.callbacks.gameUpdate(this.scoreData)
-            }
+            this.callback('gameUpdate', this.scoreData)
+
 
             if (this.verifier === undefined) throw new UnexpectedError('Score verifier not instanciated')
             if (this.gameData === undefined) throw new UnexpectedError('GameData undefined')
             this.verifier.verify(this.gameData)
         }
+    }
+
+    private callback(id: string, ...args: any[]): void {
+        if (this.callbacks[id] === undefined) return
+
+        for (let c of this.callbacks[id]) c(...args)
     }
     
     private updateSongData(songDetails: any): void {

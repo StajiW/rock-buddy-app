@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Login from './pages/Login.vue'
 import RockSniffer, { SongData } from './scripts/rocksniffer'
+import CurrentSong from './components/CurrentSong.vue'
 
 const rockSniffer = RockSniffer.instance
 rockSniffer.on('songChange', (songData: SongData) => {
@@ -11,8 +11,8 @@ rockSniffer.start()
 
 <template>
 <div id='content'>
-<!-- <Login /> -->
-<router-view />
+<CurrentSong />
+<!-- <router-view /> -->
 </div>
 </template>
 
