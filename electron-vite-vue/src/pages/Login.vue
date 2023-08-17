@@ -4,7 +4,6 @@ import { BadResponseError, UnexpectedError } from '../scripts/errors'
 import Store from '../scripts/store'
 import { alert } from '../scripts/util'
 import TextInput from '../components/TextInput.vue'
-// import fetch from 'electron-fetch'
 
 let usernameOrEmail: string
 let password: string

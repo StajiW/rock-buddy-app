@@ -1,32 +1,57 @@
 import { GameData } from './rocksniffer'
 
-const PAUSE_THRESHOLD = 500
+// const PAUSE_THRESHOLD = 500
+const MAX_TIME_OFFSET = 0.4
 
 export default class ScoreVerifier {
     verified: boolean = true
     playTimer: number = 0
-    isMaybePaused: boolean = false
-    isPaused: boolean = false
-    pauseTimer: number = 0
-    pauseTime?: number
+    paused: boolean = false
     lastPauseTime?: number
     previousGameData?: GameData
-    lastVerificationTime?: Date
+    lastVerificationTime?: number
 
-    verify(gameData: GameData) {
-        const currentTime = new Date()
-        const timeDelta = this.lastVerificationTime ? (currentTime.getTime() - this.lastVerificationTime.getTime()) : 0
+    constructor(initialPlayTimer: number) {
+        this.playTimer = initialPlayTimer
+    }
+
+    public verify(gameData: GameData): void {
+        const currentTime = new Date().getTime() / 1000
+        const timeDelta = this.lastVerificationTime ? (currentTime - this.lastVerificationTime) : 0
         this.lastVerificationTime = currentTime
         
-        if (gameData.songTimer === this.previousGameData?.songTimer) {
-            this.pauseTimer += timeDelta
+        if (this.isPaused(gameData)) {
+            if (!this.paused) this.pause(gameData)
         }
-        else {
-            this.playTimer += timeDelta
-        }
+        else if (this.paused) this.unpause(gameData, timeDelta)
 
-        console.log(gameData.songTimer - this.playTimer / 1000, gameData.songTimer, this.playTimer / 1000)
+        if (!this.paused) this.playTimer += timeDelta
+
+        if (Math.abs(this.playTimer - gameData.songTimer) > MAX_TIME_OFFSET && !gameData.ending) this.unverify()
 
         this.previousGameData = gameData
+    }
+
+    private unverify() {
+        if (!this.verified) return
+        this.verified = false
+        console.log('UNVERIFIED')
+    }
+
+    private pause(gameData: GameData): void {
+        if (this.lastPauseTime !== undefined) {
+            if (gameData.songTimer - this.lastPauseTime < 600) this.unverify()
+        }
+        this.paused = true
+        this.lastPauseTime = gameData.songTimer
+    }
+
+    private unpause(gameData: GameData, timeDelta: number): void {
+        this.paused = false
+        this.playTimer = gameData.songTimer - timeDelta
+    }
+
+    private isPaused(gameData: GameData): boolean {
+        return gameData.songTimer === this.previousGameData?.songTimer && !gameData.ending
     }
 }

@@ -4,6 +4,9 @@ import ScoreVerifier from './verification'
 const REQUIRED_SNIFFER_VERSION: string = 'v0.4.1-buddy'
 const SNIFFER_HOST = 'http://localhost:9002'
 const REFRESH_RATE = 200
+const ENDING_THRESHOLD = 0.1
+
+const STAGES_IN_SONG = ['las_game', 'nonstopplaygame', 'sa_game']
 
 export type GameData = {
     stage: string,
@@ -61,11 +64,12 @@ export default class RockSniffer {
     }
 
     private async sniff(): Promise<void> {
-        // console.log(this.inSong)
         const res = await fetch(SNIFFER_HOST)
         const json = await res.json()
         const memoryReadout = json.memoryReadout
         const songDetails = json.songDetails
+
+        this.updateGameData(memoryReadout)
 
         if (songDetails.songID !== undefined && songDetails.songID !== this.songData?.key) {
             this.updateSongData(songDetails)
@@ -73,19 +77,18 @@ export default class RockSniffer {
                 this.callbacks.songChange(this.songData)
             }
         }
-        if (memoryReadout.songTimer > 0) {
-            if (!this.inSong) this.startSong()
 
+        if (this.isInSong()) {
+            if (!this.inSong) this.startSong()
+        }
+        else if (this.inSong) this.endSong()
+
+        if (this.inSong) {
             this.updateScoreData(memoryReadout)
             if (this.callbacks.gameUpdate !== undefined) {
                 this.callbacks.gameUpdate(this.scoreData)
             }
-        }
-        else if (this.inSong) this.endSong()
 
-        this.updateGameData(memoryReadout)
-
-        if (this.inSong) {
             if (this.verifier === undefined) throw new UnexpectedError('Score verifier not instanciated')
             if (this.gameData === undefined) throw new UnexpectedError('GameData undefined')
             this.verifier.verify(this.gameData)
@@ -117,50 +120,25 @@ export default class RockSniffer {
     private updateGameData(memoryReadout: any): void {
         this.gameData = {
             stage: memoryReadout.gameStage,
-            ending: false,
+            ending: this.songData ? this.songData.length - memoryReadout.songTimer < ENDING_THRESHOLD : false,
             songTimer: memoryReadout.songTimer,
             mode: memoryReadout.mode
         }
     }
 
+    private isInSong(): boolean {
+        if (this.gameData === undefined) throw new UnexpectedError('GameData undefined')
+        return this.gameData.songTimer > 0 && STAGES_IN_SONG.includes(this.gameData.stage)
+    }
+
     private startSong(): void {
+        if (this.gameData === undefined) throw new UnexpectedError('GameData undefined')
         this.inSong = true
-        this.verifier = new ScoreVerifier()
+        this.verifier = new ScoreVerifier(this.gameData.songTimer)
     }
 
     private endSong(): void {
         this.inSong = false
         this.verifier = undefined
     }
-
-    // private updateProgressData(memoryReadout: any, delta: number): void {
-    //     if (this.progressData === undefined) throw new UnexpectedError('ProgressData undefined')
-
-    //     this.progressData.progressTimer += delta
-        
-    //     if (memoryReadout.songTimer === this.songTimer) {
-    //         this.progressData.maybePaused = true
-    //     }
-    // }
-
-    // private songStart(memoryReadout: any): void {
-    //     this.progressData = {
-    //         inLaS: memoryReadout.gameStage === 'las_game',
-    //         verified: true,
-    //         progressTimer: 0,
-    //         pauseTimer: 0,
-    //         maybePaused: false,
-    //         isPaused: false,
-    //         pauseTime: 0,
-    //         lastPauseTime: 0,
-    //         ending: false,
-    //         songTimer: memoryReadout.songTimer
-    //     }
-
-    //     this.progressData.verified = this.progressIsValid()
-    // }
-
-    // private progressIsValid(): boolean {
-    //     return true
-    // }
 }
