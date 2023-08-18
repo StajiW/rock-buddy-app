@@ -38,8 +38,6 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 
     const json = await res.json()
 
-    console.log(json)
-
     scores.value = json
 })
 </script>

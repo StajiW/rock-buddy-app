@@ -1,4 +1,5 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { execFile } from 'child_process'
 import { release } from 'node:os'
 import { join } from 'node:path'
 import ElectronStore from 'electron-store'
@@ -117,4 +118,15 @@ ipcMain.handle('open-win', (_, arg) => {
   } else {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
+})
+
+ipcMain.handle('launch-rocksniffer', () => {
+  return new Promise((resolve, reject) => {
+    execFile('RockSniffer.exe', [], { cwd: '..\\RockSniffer\\RockSniffer\\bin\\x64\\Release\\net6.0-windows' }, (error) => {
+      if (error) reject(error)
+    })
+
+    // If rocksniffer doesn't terminate for 2 seconds we're just gonna assume it's working
+    setTimeout(() => resolve(null), 2000)
+  })
 })

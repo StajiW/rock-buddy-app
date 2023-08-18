@@ -11,10 +11,9 @@ onMounted(() => {
         window.location.href = '/login'
     }
 
-    // rockSniffer.on('songChange', (songData: SongData) => {
-    //     console.log(songData)
-    // })
-    rockSniffer.start()
+    rockSniffer.startProcess(() => {
+        rockSniffer.start()
+    })
 })
 
 
@@ -32,8 +31,6 @@ body {
     margin: 0;
     width: 100%;
     height: 100%;
-
-    /* background-color: black; */
 }
 
 #content {

@@ -1,3 +1,4 @@
+import { ipcRenderer } from 'electron'
 import { NotFoundError, UnexpectedError } from './errors'
 import ScoreVerifier from './verification'
 
@@ -54,6 +55,16 @@ export default class RockSniffer {
         this.callbacks[id] ? this.callbacks[id].push(callback) : this.callbacks[id] = [callback]
     }
 
+    public async startProcess(callback: () => any): Promise<void> {
+        try {
+            await ipcRenderer.invoke('launch-rocksniffer')
+            callback()
+        } catch (error) {
+            // TODO: Make it do something when RockSniffer doesn't load properly
+            console.error(error)
+        }
+    }
+
     public start(): void {
         setInterval(() => this.sniff(), REFRESH_RATE)
     }
@@ -89,7 +100,7 @@ export default class RockSniffer {
             this.callback('gameUpdate', this.scoreData)
 
 
-            if (this.verifier === undefined) throw new UnexpectedError('Score verifier not instanciated')
+            if (this.verifier === undefined) throw new UnexpectedError('Score verifier not instantiated')
             if (this.gameData === undefined) throw new UnexpectedError('GameData undefined')
             this.verifier.verify(this.gameData)
         }
