@@ -11,9 +11,9 @@ onMounted(() => {
         window.location.href = '/login'
     }
 
-    rockSniffer.on('songChange', (songData: SongData) => {
-        console.log(songData)
-    })
+    // rockSniffer.on('songChange', (songData: SongData) => {
+    //     console.log(songData)
+    // })
     rockSniffer.start()
 })
 

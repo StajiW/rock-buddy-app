@@ -1,4 +1,4 @@
-import { NotFoundError, BadResponseError } from './errors'
+import { NotFoundError, BadResponseError, UnexpectedError } from './errors'
 import { getHost } from './util'
 import Store from '../scripts/store'
 
@@ -7,12 +7,12 @@ const store = Store.instance
 export default class Account {
     private static _instance: Account
     private _loggedIn: boolean = false
-    private authData?: object
+    private _authData?: object
     // private username?: string
 
     constructor() {
         try {
-            this.authData = JSON.parse(store.get('AUTH_DATA'))
+            this._authData = JSON.parse(store.get('AUTH_DATA'))
         } catch (error) {
             if (!(error instanceof NotFoundError)) throw error
         }
@@ -28,15 +28,20 @@ export default class Account {
         return this._loggedIn
     }
 
+    public get authData(): object {
+        if (this._authData === undefined) throw new UnexpectedError('authData is undefined')
+        return this._authData
+    }
+
     public async authDataIsValid(): Promise<boolean> {
         try {
-            if (this.authData === undefined) return false
+            if (this._authData === undefined) return false
 
             const host = getHost()
             await fetch(host + '/api/data/get_scores_las.php', {
                 method: 'POST',
                 body: JSON.stringify({
-                    auth_data: this.authData,
+                    auth_data: this._authData,
                     song_key: 'DragThro',
                     psarc_hash: 'nTmKTZj+6aeOBcGTFA2aiA==',
                     arrangement: 'lead',

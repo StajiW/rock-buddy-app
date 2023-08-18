@@ -1,46 +1,47 @@
 <script setup lang='ts'>
-import { ref } from 'vue'
-import RockSniffer from '../scripts/rocksniffer'
+import { Ref, ref } from 'vue'
+import RockSniffer, { SongData } from '../scripts/rocksniffer'
 import Account from '../scripts/account'
 import { getHost } from '../scripts/util'
+
+type Score = {
+    userId: number,
+    username: string,
+    last_played: string,
+    play_count: number,
+    streak: number,
+    mastery: number,
+    verified: boolean
+}
 
 const rockSniffer = RockSniffer.instance
 const account = Account.instance
 
-rockSniffer.on('songChange', async (songData) => {
+let path = ref('lead')
+let gamemode = ref('LaS')
+let scores: Ref<Score[]> = ref([])
+
+rockSniffer.on('songChange', async (songData: SongData) => {
     if (!account.loggedIn) return
 
     const host = getHost()
     const res = await fetch(host + '/api/data/get_scores_las.php', {
         method: 'POST',
-        
-    // auth_data: authData,
-    // song_key: rocksnifferData['songDetails']['songID'],
-    // psarc_hash: rocksnifferData['songDetails']['psarcFileHash'],
-    // arrangement: this._path
+        body: JSON.stringify({
+            auth_data: account.authData,
+            song_key: songData.key,
+            psarc_hash: songData.psarcHash,
+            arrangement: path.value,
+            version: '1.1.10'
+        })
+    })
+
+    const json = await res.json()
+
+    console.log(json)
+
+    scores.value = json
 })
-
-// async function getLearnASongScores() {
-//     const authData = JSON.parse(window.sessionStorage.getItem('auth_data') as any)
-
-//     const host = await window.api.getHost()
-//     const response = await post(host + '/api/data/get_scores_las.php', {
-//         auth_data: authData,
-//         song_key: rocksnifferData['songDetails']['songID'],
-//         psarc_hash: rocksnifferData['songDetails']['psarcFileHash'],
-//         arrangement: this._path
-//     })
-
-//     if ('error' in response) {
-//         window.api.error(response['error'])
-//         return null
-//     }
-
-//     return response
-// }
-
-let path = ref('lead')
-let gamemode = ref('LaS')
 </script>
 
 <template>
@@ -69,9 +70,16 @@ let gamemode = ref('LaS')
     </div>
 </div>
 
-<div id='leaderBoard'>
-
-</div>
+<table id='scores'>
+    <tr class='Score' v-for='(score, i) in scores'>
+        <td class='Placement'>{{ i + 1 }}</td>
+        <td class='Username'>{{ score.username }}</td>
+        <td class='Mastery'>{{ Math.round(score.mastery * 10000) / 100 }}%</td>
+        <td class='Streak'>{{ score.streak }}</td>
+        <td class='PlayCount'>{{ score.play_count }}</td>
+        <td class='LastPlayer'>{{ score.last_played }}</td>
+    </tr>
+</table>
 </template>
 
 <style scoped>
@@ -133,5 +141,25 @@ let gamemode = ref('LaS')
 
 .Gamemode.Selected {
     outline: 2px solid white;
+}
+
+#scores {
+    width: 100%;
+    padding: 1rem;
+
+    color: white;
+
+    background-color: var(--dark-gray);
+
+    border-radius: .25rem;
+}
+
+.Score {
+    width: 100%;
+}
+
+.Placement {
+    min-width: 1.5rem;
+    margin-right: 1rem;
 }
 </style>
