@@ -156,9 +156,9 @@ function getRocksmithProfiles(steamUserDataPath, steamProfile) {
 
 function getRocksnifferPath() {
     let rocksnifferPath = 'RockSniffer';
-    // if (isDev) {
-    //     rocksnifferPath = 'RockSniffer/RockSniffer/bin/x64/Release/net6.0-windows';
-    // }
+    if (isDev || true) {
+        rocksnifferPath = 'RockSniffer/RockSniffer/bin/x64/Release/net6.0-windows';
+    }
 
     return rocksnifferPath;
 }
@@ -210,6 +210,8 @@ function createWindow() {
         },
         icon: path.join(__dirname, '..', 'images', 'favicon.ico')
     });
+
+    win.webContents.openDevTools()
 
     let resizeTimer;
     win.on('resize', () => {

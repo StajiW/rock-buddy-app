@@ -2,61 +2,31 @@
 import { getHost } from '../scripts/util'
 import { BadResponseError, UnexpectedError } from '../scripts/errors'
 import Store from '../scripts/store'
-import { alert } from '../scripts/util'
 import TextInput from '../components/TextInput.vue'
+import Account from '../scripts/account'
+import { ref } from 'vue'
+
+const store = Store.instance
+const account = Account.instance
 
 let usernameOrEmail: string
 let password: string
-const store = Store.instance
+let alert = ref('')
 
-async function generateAuthData(usernameOrEmail: string, password: string): Promise<void> {
-    const host = getHost()
-    console.log('y')
-    const response = await fetch(host + '/api/auth/login.php', {
-        method: 'POST',
-        body: JSON.stringify({
-            username_or_email: usernameOrEmail,
-            password: password,
-            version: '1.1.10'
-        }),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-
-    if ('error' in response) {
-        throw new BadResponseError(response['error'] as (string | undefined))
-    }
-
-    // return response
-}
 
 async function login(): Promise<void> {
     try {
-        const authData = await generateAuthData(usernameOrEmail, password)
-
-        // Login successful - store auth data
-        await store.set('auth_data', authData)
-
-        // Email is verified - proceed to application
-        // window.location.href = '../index.html'
-        alert('login succesful')
-        return
+        await account.logInWithCredentials(usernameOrEmail, password)
     } catch (error) {
-        console.error(error)
-        if ((error as Error).name === 'BAD_RESPONSE_ERROR') {
-            alert(error.message)
-            password = ''
-            return
+        if (error instanceof BadResponseError) {
+            alert.value = error.message
         }
-
-        throw new UnexpectedError((error as Error).message)
     }
 }
 
 async function resetPassword(): Promise<void> {
     if (usernameOrEmail.trim() === '') {
-        alert('Please enter your username or email.')
+        // alert('Please enter your username or email.')
         return
     }
 
@@ -74,7 +44,7 @@ async function resetPassword(): Promise<void> {
     }
 
     if ('success' in response && response.success) {
-        alert(`Password reset request for "${usernameOrEmail}" sent successfully.\n\nCheck your email for a reset link.`);
+        // alert(`Password reset request for "${usernameOrEmail}" sent successfully.\n\nCheck your email for a reset link.`);
     }
 }
 </script>
@@ -82,14 +52,48 @@ async function resetPassword(): Promise<void> {
 <template>
 <div id='login'>
     <div class='HeaderMedium'>Please Log In</div>
-    <TextInput label='Username / Email' v-model='usernameOrEmail' />
-    <TextInput label='Password' v-model='password' />
-    <div class='Button' @click='login()'>Log In</div>
+    <div id='inputs'>
+        <TextInput label='Username / Email' v-model='usernameOrEmail' />
+        <TextInput label='Password' v-model='password' type='password' />
+    </div>
+    <div id='bottomRow'>
+        <button @click='login()'>Log In</button>
+        <div v-if='alert' id='alert'>{{ alert }}</div>
+    </div>
+
 </div>
 </template>
 
 <style scoped>
 #login {
+    width: 500px;
+
+    margin: auto;
     margin-top: 10rem;
+    padding: 2rem;
+
+    border: 1px solid var(--dark-gray);
+    border-radius: .25rem;
+
+    /* box-shadow: 0 0 .5rem rgba(0, 0, 0, .5); */
+}
+
+#inputs {
+    margin-bottom: 2rem;
+}
+
+#bottomRow {
+    display: flex;
+    justify-content: space-between;
+}
+
+#alert {
+    display: inline-block;
+    padding: .5rem;
+
+    color: var(--color-red);
+    text-decoration: underline;
+
+    animation: appear .2s;
 }
 </style>

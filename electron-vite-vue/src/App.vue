@@ -1,28 +1,39 @@
 <script setup lang="ts">
 import RockSniffer, { SongData } from './scripts/rocksniffer'
-import CurrentSong from './components/CurrentSong.vue'
+import Account from './scripts/account'
+import { onMounted } from 'vue'
 
 const rockSniffer = RockSniffer.instance
-rockSniffer.on('songChange', (songData: SongData) => {
-    console.log(`song change: ${songData.title}`)
+const account = Account.instance
+
+onMounted(() => {
+    if (!account.authDataIsValid()) {
+        window.location.href = '/login'
+    }
+
+    rockSniffer.on('songChange', (songData: SongData) => {
+        console.log(songData)
+    })
+    rockSniffer.start()
 })
-rockSniffer.start()
+
+
+
 </script>
 
 <template>
 <div id='content'>
-<CurrentSong />
-<!-- <router-view /> -->
+<router-view />
 </div>
 </template>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
-
 body {
     margin: 0;
     width: 100%;
     height: 100%;
+
+    /* background-color: black; */
 }
 
 #content {

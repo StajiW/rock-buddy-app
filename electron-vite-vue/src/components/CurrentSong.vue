@@ -6,16 +6,16 @@ const rockSniffer = RockSniffer.instance
 
 let title = ref('')
 let artist = ref('')
-let album: string
-let year: number
-let albumCover: string
+let album = ref('')
+let year = ref(0)
+let albumCover = ref('')
 
 rockSniffer.on('songChange', (songData: SongData) => {
     title.value = songData.title
     artist.value = songData.artist
-    album = songData.album
-    year = songData.year
-    albumCover = songData.albumCover
+    album.value = songData.album
+    year.value = songData.year
+    albumCover.value = songData.albumCover
 })
 </script>
 
@@ -40,9 +40,9 @@ rockSniffer.on('songChange', (songData: SongData) => {
 
     padding: 1rem;
 
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: var(--dark-gray);
     color: white;
-    box-shadow: 0 0 1rem rgba(0, 0, 0, .5);
+    /* box-shadow: 0 0 1rem rgba(0, 0, 0, .5); */
 
     border-radius: .25rem;
 }
@@ -51,8 +51,6 @@ rockSniffer.on('songChange', (songData: SongData) => {
     width: 10rem;
     height: 10rem;
     margin-right: 1rem;
-
-    /* box-shadow: 0 0 1rem rgba(0, 0, 0, .5); */
 
     border: 2px solid white;
     border-radius: .25rem;

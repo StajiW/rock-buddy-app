@@ -1,14 +1,13 @@
 <script setup lang='ts'>
-const props = defineProps({ label: String, modelValue: String })
+const props = defineProps({ label: String, modelValue: String, type: String })
 const emit = defineEmits([ 'update:modelValue' ])
-
-
 </script>
 
 <template>
 <div class='TextInput'>
     <div class='Label'>{{ label }}</div>
     <input
+        :type='props.type || "text"'
         :value='modelValue'
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
@@ -37,15 +36,21 @@ input {
     /* max-width: 70%; */
     width: 100%;
     padding: .25rem;
+    box-sizing: border-box;
 
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Roboto Mono', monospace;
     font-size: 1rem;
-    color: #222222;
+    color: var(--dark-gray);
 
-    background-color: #DDDDDD;
+    /* background-color: var(--light-gray); */
 
-    outline: none !important;
-    border: none !important;
+    outline: none;
+    border: 1px solid var(--dark-gray) !important;
     border-radius: .25rem;
+}
+
+input:focus {
+    outline: 1px dashed var(--dark-gray);
+    outline-offset: .25rem;
 }
 </style>
