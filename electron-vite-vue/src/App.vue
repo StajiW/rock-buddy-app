@@ -1,23 +1,22 @@
 <script setup lang="ts">
-import RockSniffer, { SongData } from './scripts/rocksniffer'
-import Account from './scripts/account'
+import { useRouter } from 'vue-router'
 import { onMounted } from 'vue'
+import RockSniffer from './scripts/rocksniffer'
+import Account from './scripts/account'
 
+const router = useRouter()
 const rockSniffer = RockSniffer.instance
 const account = Account.instance
 
-onMounted(() => {
-    if (!account.authDataIsValid()) {
-        window.location.href = '/login'
+onMounted(async () => {
+    if (!(await account.authDataIsValid())) {
+        router.push('/login')
     }
 
     rockSniffer.startProcess(() => {
         rockSniffer.start()
     })
 })
-
-
-
 </script>
 
 <template>

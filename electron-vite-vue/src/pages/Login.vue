@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import { useRouter } from 'vue-router'
 import { getHost } from '../scripts/util'
 import { BadResponseError, UnexpectedError } from '../scripts/errors'
 import Store from '../scripts/store'
@@ -6,6 +7,7 @@ import TextInput from '../components/TextInput.vue'
 import Account from '../scripts/account'
 import { ref } from 'vue'
 
+const router = useRouter()
 const store = Store.instance
 const account = Account.instance
 
@@ -17,6 +19,8 @@ let alert = ref('')
 async function login(): Promise<void> {
     try {
         await account.logInWithCredentials(usernameOrEmail, password)
+        router.push('/')
+
     } catch (error) {
         if (error instanceof BadResponseError) {
             alert.value = error.message

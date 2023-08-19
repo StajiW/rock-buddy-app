@@ -38,7 +38,7 @@ export default class Account {
             if (this._authData === undefined) return false
 
             const host = getHost()
-            await fetch(host + '/api/data/get_scores_las.php', {
+            const res = await fetch(host + '/api/data/get_scores_las.php', {
                 method: 'POST',
                 body: JSON.stringify({
                     auth_data: this._authData,
@@ -52,13 +52,13 @@ export default class Account {
                 }
             })
 
-            this._loggedIn = true
+            if (!res.ok) throw new BadResponseError('user auth check failed')
 
+            this._loggedIn = true
             return true
         } catch (error) {
             console.error(error)
-            if (error instanceof NotFoundError) return false
-            throw error
+            return false
         }
     }
 

@@ -68,7 +68,7 @@ rockSniffer.on('songChange', (songData: SongData) => {
 }
 
 #title {
-    font-size: 3rem;
+    font-size: 2rem;
 }
 
 #artist {

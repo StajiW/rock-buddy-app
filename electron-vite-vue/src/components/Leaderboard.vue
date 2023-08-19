@@ -43,44 +43,79 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 </script>
 
 <template>
-<div id='topRow'>
-    <div id='paths'>
-        <button class='Path' id='lead'
-        :class="{ Selected: path === 'lead' }"
-        @click="path = 'lead'">L</button>
+<div id='leaderboard'>
+    <div id='topRow'>
+        <div id='paths'>
+            <button class='Path' id='lead'
+            :class="{ Selected: path === 'lead' }"
+            @click="path = 'lead'">L</button>
 
-        <button class='Path' id='rhythm'
-        :class="{ Selected: path === 'rhythm' }"
-        @click="path = 'rhythm'">R</button>
+            <button class='Path' id='rhythm'
+            :class="{ Selected: path === 'rhythm' }"
+            @click="path = 'rhythm'">R</button>
 
-        <button class='Path' id='bass'
-        :class="{ Selected: path === 'bass' }"
-        @click="path = 'bass'">B</button>
+            <button class='Path' id='bass'
+            :class="{ Selected: path === 'bass' }"
+            @click="path = 'bass'">B</button>
+        </div>
+        <div id='gamemodes'>
+            <button class='Gamemode'
+            :class="{ Selected: gamemode === 'LaS' }"
+            @click="gamemode = 'LaS'">Learn a Song</button>
+
+            <button class='Gamemode'
+            :class="{ Selected: gamemode === 'SA' }"
+            @click="gamemode = 'SA'">Score Attack</button>
+        </div>
     </div>
-    <div id='gamemodes'>
-        <button class='Gamemode'
-        :class="{ Selected: gamemode === 'LaS' }"
-        @click="gamemode = 'LaS'">Learn a Song</button>
 
-        <button class='Gamemode'
-        :class="{ Selected: gamemode === 'SA' }"
-        @click="gamemode = 'SA'">Score Attack</button>
+    <!-- <table id='scores'>
+        <tr class='Score' v-for='(score, i) in scores'>
+            <td class='Placement'>{{ i + 1 }}</td>
+            <td class='Username'>{{ score.username }}</td>
+            <td class='Mastery'>{{ Math.round(score.mastery * 10000) / 100 }}%</td>
+            <td class='Streak'>{{ score.streak }}</td>
+            <td class='PlayCount'>{{ score.play_count }}</td>
+            <td class='LastPlayer'>{{ score.last_played }}</td>
+        </tr>
+    </table> -->
+
+    <div id='scores'>
+        <div class='Score First'>
+            <div class='Placement'>1</div>
+            <div>{{  scores[0].username  }} <div id='crown' /></div>
+            <div class='Gap' />
+            <div>{{ Math.round(scores[0].mastery * 10000) / 100 }}%</div>
+        </div>
+
+        <div id='secondaryInfo'>
+            <div class='Streak'>Streak: {{ scores[0].streak }}</div>
+            <div class='PlayCount'>Play Count: {{ scores[0].play_count }}</div>
+            <div class='LastPlayed'>Last Played: {{ scores[0].last_played }}</div>
+        </div>
+
+        <div class='Score' v-for='(score, i) in scores.slice(1)'>
+            <div class='Placement'>{{ i + 2 }}</div>
+            <div class='Username'>{{  score.username  }}</div>
+            <div class='Gap' />
+            <div class='Mastery'>{{ (Math.round(score.mastery * 10000) / 100).toFixed(2) }}%</div>
+            <!-- <div class='Streak'>{{ score.streak }} streak</div>
+            <div class='Gap' />
+            <div class='PlayCount'>{{ score.play_count }} plays</div>
+            <div class='LastPlayed'>{{ score.last_played }}</div> -->
+        </div>
     </div>
 </div>
-
-<table id='scores'>
-    <tr class='Score' v-for='(score, i) in scores'>
-        <td class='Placement'>{{ i + 1 }}</td>
-        <td class='Username'>{{ score.username }}</td>
-        <td class='Mastery'>{{ Math.round(score.mastery * 10000) / 100 }}%</td>
-        <td class='Streak'>{{ score.streak }}</td>
-        <td class='PlayCount'>{{ score.play_count }}</td>
-        <td class='LastPlayer'>{{ score.last_played }}</td>
-    </tr>
-</table>
 </template>
 
 <style scoped>
+#leaderboard {
+    padding: 1rem;
+
+    background-color: var(--dark-gray);
+    border-radius: .25rem;
+}
+
 #topRow {
     display: flex;
     justify-content: space-between;
@@ -89,10 +124,9 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 
     width: 100%;
     margin-bottom: 1rem;
-    padding: 1rem;
+    /* padding-bottom: 1rem; */
 
-    background-color: var(--dark-gray);
-    border-radius: .25rem;
+    /* border-bottom: 1px dashed white; */
 }
 
 .Path {
@@ -143,7 +177,6 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 
 #scores {
     width: 100%;
-    padding: 1rem;
 
     color: white;
 
@@ -153,11 +186,68 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 }
 
 .Score {
+    display: flex;
+    justify-content: space-between;
+
     width: 100%;
+}
+
+.Score > {
+    flex-grow: 1;
+}
+
+.Score .Gap {
+    flex-grow: 1;
+}
+
+.Score .Username {
+    width: 10rem;
+}
+
+.Score.First {
+    font-size: 2rem;
+}
+
+.Score.First .Username {
+    flex-grow: 1;
+}
+
+/* .Score .Mastery {
+    width: 5rem;
+} */
+
+.Score .LastPlayed {
+    width: 8rem;
+    text-align: right;
+}
+
+#crown {
+    display: inline-block;
+
+    width: 2rem;
+    height: 2rem;
+
+    transform: translateY(.25rem);
+
+    background-image: url(../assets/crown.svg);
+    background-size: cover;
+
+    filter: invert(1);
 }
 
 .Placement {
     min-width: 1.5rem;
     margin-right: 1rem;
+}
+
+#secondaryInfo {
+    display: flex;
+    justify-content: space-between;
+
+    margin-bottom: 1rem;
+}
+
+#secondaryInfo .Streak {
+    margin-left: 2.5rem;
 }
 </style>
