@@ -18,6 +18,7 @@ export type GameData = {
 
 export type ScoreData = {
     notesHit: number,
+    notesMissed: number,
     accuracy: number,
     streak: number,
     highestStreak: number
@@ -115,7 +116,7 @@ export default class RockSniffer {
 
         if (this.inSong) {
             this.updateScoreData(memoryReadout)
-            this.callback('gameUpdate', this.scoreData)
+            this.callback('update', this.scoreData)
 
 
             if (this.verifier === undefined) throw new UnexpectedError('Score verifier not instantiated')
@@ -187,6 +188,7 @@ export default class RockSniffer {
     private updateScoreData(memoryReadout: any): void {
         this.scoreData = {
             notesHit: memoryReadout.noteData.TotalNotesHit,
+            notesMissed: memoryReadout.noteData.TotalNotesMissed,
             accuracy: memoryReadout.noteData.Accuracy,
             streak: memoryReadout.noteData.CurrentHitStreak,
             highestStreak: memoryReadout.noteData.HighestHitStreak

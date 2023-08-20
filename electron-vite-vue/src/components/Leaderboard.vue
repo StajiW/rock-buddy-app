@@ -28,7 +28,7 @@ let noScores = ref(false)
 rockSniffer.on('songChange', async (newSongData: SongData) => {
     songData = newSongData
     arrangements.value = songData.arrangements
-    arrangement.value = songData.arrangements[0] // This should pick by last selection / preference, and main paths first
+    arrangement.value = songData.arrangements[0] // This should pick by last selection / preference
 
     updateScores()
 })
@@ -79,24 +79,18 @@ function selectArrangement(chosenArrangement: ArrangementData) {
         <div id='arrangementTypes'>
             <!-- I hate how this looks there's probably a way to make small component functions -->
             <button class='ArrangmentType' id='lead'
-            :class='{
-                Selected: arrangement.type === ArrangementType.Lead,
-                InActive: !arrangements.some(x => x.type === ArrangementType.Lead)
-            }'
+            :class='{ Selected: arrangement.type === ArrangementType.Lead }'
+            :disabled='!arrangements.some(x => x.type === ArrangementType.Lead)'
             @click='selectArrangementType(ArrangementType.Lead)'>L</button>
 
             <button class='ArrangmentType' id='rhythm'
-            :class='{
-                Selected: arrangement.type === ArrangementType.Rhythm,
-                InActive: !arrangements.some(x => x.type === ArrangementType.Rhythm)
-            }'
+            :class='{ Selected: arrangement.type === ArrangementType.Rhythm }'
+            :disabled='!arrangements.some(x => x.type === ArrangementType.Rhythm)'
             @click='selectArrangementType(ArrangementType.Rhythm)'>R</button>
 
             <button class='ArrangmentType' id='bass'
-            :class='{
-                Selected: arrangement.type === ArrangementType.Bass,
-                InActive: !arrangements.some(x => x.type === ArrangementType.Bass)
-            }'
+            :class='{ Selected: arrangement.type === ArrangementType.Bass }'
+            :disabled='!arrangements.some(x => x.type === ArrangementType.Bass)'
             @click='selectArrangementType(ArrangementType.Bass)'>B</button>
         </div>
         <div id='arrangements'>
@@ -195,7 +189,7 @@ function selectArrangement(chosenArrangement: ArrangementData) {
     background-color: var(--color-blue);
 }
 
-.ArrangmentType.InActive {
+.ArrangmentType:disabled {
     opacity: .5;
 
     pointer-events: none;
