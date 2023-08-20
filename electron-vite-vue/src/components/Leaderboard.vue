@@ -3,6 +3,7 @@ import { Ref, ref } from 'vue'
 import RockSniffer, { SongData } from '../scripts/rocksniffer'
 import Account from '../scripts/account'
 import { getHost } from '../scripts/util'
+import Dropdown from './Dropdown.vue';
 
 type Score = {
     userId: number,
@@ -37,12 +38,12 @@ rockSniffer.on('songChange', async (songData: SongData) => {
         })
     })
 
-    if (res.status === 400) {
+    const json = await res.json()
+
+    if (res.status === 400 || (Array.isArray(json) && json.length === 0)) {
         noScores.value = true
         return
     }
-
-    const json = await res.json()
 
     noScores.value = false
     scores.value = json
@@ -55,7 +56,7 @@ rockSniffer.on('songChange', async (songData: SongData) => {
         <div id='paths'>
             <button class='Path' id='lead'
             :class="{ Selected: path === 'lead' }"
-            @click="path = 'lead'">L</button>
+            @click="path = 'lead'">L<Dropdown :options="['Lead', 'Bonus Lead', 'Alt. Lead']" selected='Lead'/></button>
 
             <button class='Path' id='rhythm'
             :class="{ Selected: path === 'rhythm' }"
@@ -128,6 +129,7 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 }
 
 .Path {
+    position: relative;
     width: 2.25rem;
     height: 2.25rem;
 
@@ -158,6 +160,12 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 
 .Path#bass {
     background-color: var(--color-blue);
+}
+
+.Dropdown {
+    position: absolute;
+    top: 1.4rem;
+    left: 1.4rem;
 }
 
 .Gamemode {
