@@ -114,7 +114,7 @@ function selectArrangement(chosenArrangement: ArrangementData) {
             <div class='Placement'>1</div>
             <div>{{  scores[0].username  }} <div id='crown' /></div>
             <div class='Gap' />
-            <div>{{ Math.round(scores[0].mastery * 10000) / 100 }}%</div>
+            <div>{{ (Math.round(scores[0].mastery * 10000) / 100).toFixed(2) }}%</div>
         </div>
 
         <div id='secondaryInfo'>
@@ -123,15 +123,17 @@ function selectArrangement(chosenArrangement: ArrangementData) {
             <div class='LastPlayed'>Last Played: {{ scores[0].last_played || 'unknown' }}</div>
         </div>
 
-        <div class='Score' v-for='(score, i) in scores.slice(1)'>
-            <div class='Placement'>{{ i + 2 }}</div>
-            <div class='Username'>{{  score.username  }}</div>
-            <div class='Gap' />
-            <div class='Mastery'>{{ (Math.round(score.mastery * 10000) / 100).toFixed(2) }}%</div>
-            <!-- <div class='Streak'>{{ score.streak }} streak</div>
-            <div class='Gap' />
-            <div class='PlayCount'>{{ score.play_count }} plays</div>
-            <div class='LastPlayed'>{{ score.last_played }}</div> -->
+        <div id='lowerScores' v-if='scores.length > 1'>
+            <div class='Score' v-for='(score, i) in scores.slice(1)'>
+                <div class='Placement'>{{ i + 2 }}</div>
+                <div class='Username'>{{  score.username  }}</div>
+                <div class='Gap' />
+                <div class='Mastery'>{{ (Math.round(score.mastery * 10000) / 100).toFixed(2) }}%</div>
+                <!-- <div class='Streak'>{{ score.streak }} streak</div>
+                <div class='Gap' />
+                <div class='PlayCount'>{{ score.play_count }} plays</div>
+                <div class='LastPlayed'>{{ score.last_played }}</div> -->
+            </div>
         </div>
     </div>
 </div>
@@ -286,11 +288,13 @@ function selectArrangement(chosenArrangement: ArrangementData) {
 #secondaryInfo {
     display: flex;
     justify-content: space-between;
-
-    margin-bottom: 1rem;
 }
 
 #secondaryInfo .Streak {
     margin-left: 2.5rem;
+}
+
+#lowerScores {
+    margin-top: 1rem;
 }
 </style>

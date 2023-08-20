@@ -157,6 +157,7 @@ export default class RockSniffer {
         })
 
         this.addDuplicatePathNameNumbers(arrangements)
+        this.sortArrangements(arrangements)
 
         return arrangements
     }
@@ -172,6 +173,15 @@ export default class RockSniffer {
                 arrangementsWithPathName[i].name += ` ${i + 1}`
             }
         }
+    }
+
+    private sortArrangements(arrangements: ArrangementData[]): void {
+        arrangements.sort((a, b) => {
+            if (a.type !== b.type) return (a.type - b.type)     // If type is not the same, pick the lower one (Lead over Rhythm over Bass)
+            if (ArrangementType[a.type] === a.name) return -1   // If the name is the same as the type (like "Lead") pick that one
+            if (ArrangementType[b.type] === b.name) return 1    // Or that one
+            return a.name.localeCompare(b.name)                 // Otherwise just sort alphabetically
+        })
     }
 
     private updateScoreData(memoryReadout: any): void {
