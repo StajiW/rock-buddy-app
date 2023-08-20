@@ -1,9 +1,10 @@
 <script setup lang='ts'>
 import { Ref, ref } from 'vue'
-import RockSniffer, { SongData } from '../scripts/rocksniffer'
+import RockSniffer, { SongData, ArrangementData } from '../scripts/rocksniffer'
 import Account from '../scripts/account'
 import { getHost } from '../scripts/util'
-import Dropdown from './Dropdown.vue';
+import { ArrangementType } from '../scripts/rocksniffer';
+import { UnexpectedError } from '../scripts/errors';
 
 type Score = {
     userId: number,
@@ -18,13 +19,23 @@ type Score = {
 const rockSniffer = RockSniffer.instance
 const account = Account.instance
 
-let path = ref('lead')
-let gamemode = ref('LaS')
+let arrangements: Ref<ArrangementData[]> = ref([])
+let arrangement: Ref<ArrangementData | undefined> = ref()
+let songData: SongData
 let scores: Ref<Score[]> = ref([])
 let noScores = ref(false)
 
-rockSniffer.on('songChange', async (songData: SongData) => {
+rockSniffer.on('songChange', async (newSongData: SongData) => {
+    songData = newSongData
+    arrangements.value = songData.arrangements
+    arrangement.value = songData.arrangements[0] // This should pick by last selection / preference, and main paths first
+
+    updateScores()
+})
+
+async function updateScores() {
     if (!account.loggedIn) return
+    if (arrangement.value === undefined) throw new UnexpectedError('arrangement undefined')
 
     const host = getHost()
     const res = await fetch(host + '/api/data/get_scores_las.php', {
@@ -33,7 +44,7 @@ rockSniffer.on('songChange', async (songData: SongData) => {
             auth_data: account.authData,
             song_key: songData.key,
             psarc_hash: songData.psarcHash,
-            arrangement: path.value,
+            arrangement: ArrangementType[arrangement.value.type].toLowerCase(),
             version: '1.1.10'
         })
     })
@@ -47,33 +58,53 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 
     noScores.value = false
     scores.value = json
-})
+}
+
+function selectArrangementType(arrangementType: ArrangementType) {
+    const chosenArrangement = arrangements.value.find(x => x.type === arrangementType)
+    if (chosenArrangement === undefined) return
+    selectArrangement(chosenArrangement)
+}
+
+function selectArrangement(chosenArrangement: ArrangementData) {
+    arrangement.value = chosenArrangement
+    updateScores()
+}
 </script>
 
 <template>
+    
 <div id='leaderboard'>
-    <div id='topRow'>
-        <div id='paths'>
-            <button class='Path' id='lead'
-            :class="{ Selected: path === 'lead' }"
-            @click="path = 'lead'">L<Dropdown :options="['Lead', 'Bonus Lead', 'Alt. Lead']" selected='Lead'/></button>
+    <div id='topRow' v-if='arrangement'>
+        <div id='arrangementTypes'>
+            <!-- I hate how this looks there's probably a way to make small component functions -->
+            <button class='ArrangmentType' id='lead'
+            :class='{
+                Selected: arrangement.type === ArrangementType.Lead,
+                InActive: !arrangements.some(x => x.type === ArrangementType.Lead)
+            }'
+            @click='selectArrangementType(ArrangementType.Lead)'>L</button>
 
-            <button class='Path' id='rhythm'
-            :class="{ Selected: path === 'rhythm' }"
-            @click="path = 'rhythm'">R</button>
+            <button class='ArrangmentType' id='rhythm'
+            :class='{
+                Selected: arrangement.type === ArrangementType.Rhythm,
+                InActive: !arrangements.some(x => x.type === ArrangementType.Rhythm)
+            }'
+            @click='selectArrangementType(ArrangementType.Rhythm)'>R</button>
 
-            <button class='Path' id='bass'
-            :class="{ Selected: path === 'bass' }"
-            @click="path = 'bass'">B</button>
+            <button class='ArrangmentType' id='bass'
+            :class='{
+                Selected: arrangement.type === ArrangementType.Bass,
+                InActive: !arrangements.some(x => x.type === ArrangementType.Bass)
+            }'
+            @click='selectArrangementType(ArrangementType.Bass)'>B</button>
         </div>
-        <div id='gamemodes'>
-            <button class='Gamemode'
-            :class="{ Selected: gamemode === 'LaS' }"
-            @click="gamemode = 'LaS'">Learn a Song</button>
-
-            <button class='Gamemode'
-            :class="{ Selected: gamemode === 'SA' }"
-            @click="gamemode = 'SA'">Score Attack</button>
+        <div id='arrangements'>
+            <!-- v-if='arrangements.filter(x => x.type === arrangement?.type).length > 1' -->
+            <button class='Arrangement'
+            v-for='a in arrangements.filter(x => x.type === arrangement?.type)'
+            :class='{ Selected: arrangement.name === a.name }'
+            @click='arrangement = a'>{{ a.name }}</button>
         </div>
     </div>
 
@@ -128,7 +159,7 @@ rockSniffer.on('songChange', async (songData: SongData) => {
     /* border-bottom: 1px dashed white; */
 }
 
-.Path {
+.ArrangmentType {
     position: relative;
     width: 2.25rem;
     height: 2.25rem;
@@ -146,20 +177,26 @@ rockSniffer.on('songChange', async (songData: SongData) => {
     outline-offset: .25rem;
 }
 
-.Path.Selected {
+.ArrangmentType.Selected {
     outline: 2px solid white;
 }
 
-.Path#lead {
+.ArrangmentType#lead {
     background-color: var(--color-orange);
 }
 
-.Path#rhythm {
+.ArrangmentType#rhythm {
     background-color: var(--color-green);
 }
 
-.Path#bass {
+.ArrangmentType#bass {
     background-color: var(--color-blue);
+}
+
+.ArrangmentType.InActive {
+    opacity: .5;
+
+    pointer-events: none;
 }
 
 .Dropdown {
@@ -168,7 +205,7 @@ rockSniffer.on('songChange', async (songData: SongData) => {
     left: 1.4rem;
 }
 
-.Gamemode {
+.Arrangement {
     margin-left: 1rem;
 
     background: none;
@@ -177,7 +214,7 @@ rockSniffer.on('songChange', async (songData: SongData) => {
     outline-offset: 0;
 }
 
-.Gamemode.Selected {
+.Arrangement.Selected {
     outline: 2px solid white;
 }
 

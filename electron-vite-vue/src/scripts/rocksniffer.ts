@@ -151,7 +151,7 @@ export default class RockSniffer {
 
             return {
                 name: name,
-                type: arrangement.type,
+                type: ArrangementType[arrangement.type],
                 totalNotes: arrangement.totalNotes
             }
         })
@@ -164,7 +164,7 @@ export default class RockSniffer {
     private addDuplicatePathNameNumbers(arrangements: ArrangementData[]): void {
         const uniquePathNames: string[] = [...new Set(arrangements.map(x => x.name))]
 
-        for (let pathName of uniquePathNames) {
+        for (let pathName of uniquePathNames) {     // Not sure if this would put arrangement 1 - 2 in the right order
             const arrangementsWithPathName = arrangements.filter(x => x.name === pathName)
             if (arrangementsWithPathName.length <= 1) continue
 
