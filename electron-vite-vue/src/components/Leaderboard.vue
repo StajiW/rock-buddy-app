@@ -20,6 +20,7 @@ const account = Account.instance
 let path = ref('lead')
 let gamemode = ref('LaS')
 let scores: Ref<Score[]> = ref([])
+let noScores = ref(false)
 
 rockSniffer.on('songChange', async (songData: SongData) => {
     if (!account.loggedIn) return
@@ -36,8 +37,14 @@ rockSniffer.on('songChange', async (songData: SongData) => {
         })
     })
 
+    if (res.status === 400) {
+        noScores.value = true
+        return
+    }
+
     const json = await res.json()
 
+    noScores.value = false
     scores.value = json
 })
 </script>
@@ -69,18 +76,8 @@ rockSniffer.on('songChange', async (songData: SongData) => {
         </div>
     </div>
 
-    <!-- <table id='scores'>
-        <tr class='Score' v-for='(score, i) in scores'>
-            <td class='Placement'>{{ i + 1 }}</td>
-            <td class='Username'>{{ score.username }}</td>
-            <td class='Mastery'>{{ Math.round(score.mastery * 10000) / 100 }}%</td>
-            <td class='Streak'>{{ score.streak }}</td>
-            <td class='PlayCount'>{{ score.play_count }}</td>
-            <td class='LastPlayer'>{{ score.last_played }}</td>
-        </tr>
-    </table> -->
-
-    <div id='scores'>
+    <div id='noScores' v-if='noScores'>No scores for this path have been recorded yet :(</div>
+    <div id='scores' v-else>
         <div class='Score First'>
             <div class='Placement'>1</div>
             <div>{{  scores[0].username  }} <div id='crown' /></div>
@@ -90,8 +87,8 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 
         <div id='secondaryInfo'>
             <div class='Streak'>Streak: {{ scores[0].streak }}</div>
-            <div class='PlayCount'>Play Count: {{ scores[0].play_count }}</div>
-            <div class='LastPlayed'>Last Played: {{ scores[0].last_played }}</div>
+            <div class='PlayCount'>Play Count: {{ scores[0].play_count || 'unknown' }}</div>
+            <div class='LastPlayed'>Last Played: {{ scores[0].last_played || 'unknown' }}</div>
         </div>
 
         <div class='Score' v-for='(score, i) in scores.slice(1)'>
@@ -112,6 +109,7 @@ rockSniffer.on('songChange', async (songData: SongData) => {
 #leaderboard {
     padding: 1rem;
 
+    color: white;
     background-color: var(--dark-gray);
     border-radius: .25rem;
 }

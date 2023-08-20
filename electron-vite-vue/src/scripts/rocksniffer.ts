@@ -23,6 +23,18 @@ export type ScoreData = {
     highestStreak: number
 }
 
+export enum ArrangementType {
+    Lead,
+    Rhythm,
+    Bass
+}
+
+export type ArrangementData = {
+    name: string,
+    type: ArrangementType,
+    totalNotes: number
+}
+
 export type SongData = {
     key: string,
     psarcHash: string,
@@ -32,7 +44,7 @@ export type SongData = {
     year: number,
     albumCover: string,
     length: number,
-    // totalNotes: number
+    arrangements: ArrangementData[]
 }
 
 export default class RockSniffer {
@@ -53,6 +65,12 @@ export default class RockSniffer {
 
     public on(id: string, callback: (...args: any[]) => any) {
         this.callbacks[id] ? this.callbacks[id].push(callback) : this.callbacks[id] = [callback]
+    }
+
+    private callback(id: string, ...args: any[]): void {
+        if (this.callbacks[id] === undefined) return
+
+        for (let c of this.callbacks[id]) c(...args)
     }
 
     public async startProcess(callback: () => any): Promise<void> {
@@ -105,12 +123,6 @@ export default class RockSniffer {
             this.verifier.verify(this.gameData)
         }
     }
-
-    private callback(id: string, ...args: any[]): void {
-        if (this.callbacks[id] === undefined) return
-
-        for (let c of this.callbacks[id]) c(...args)
-    }
     
     private updateSongData(songDetails: any): void {
         this.songData = {
@@ -121,7 +133,44 @@ export default class RockSniffer {
             album: songDetails.albumName,
             year: songDetails.albumYear,
             albumCover: songDetails.albumArt,
-            length: songDetails.songLength
+            length: songDetails.songLength,
+            arrangements: this.getArrangementData(songDetails)
+        }
+    }
+
+    private getArrangementData(songDetails: any): ArrangementData[] {
+        const arrangements: ArrangementData[] = songDetails.arrangements.map((arrangement: any) => {
+            let name = ''
+
+            if (arrangement.isAlternateArrangement) {
+                if (arrangement.isBonusArrangement) name += 'Bonus '
+                else                                name += 'Alternate '                 
+            }
+
+            name += arrangement.type
+
+            return {
+                name: name,
+                type: arrangement.type,
+                totalNotes: arrangement.totalNotes
+            }
+        })
+
+        this.addDuplicatePathNameNumbers(arrangements)
+
+        return arrangements
+    }
+
+    private addDuplicatePathNameNumbers(arrangements: ArrangementData[]): void {
+        const uniquePathNames: string[] = [...new Set(arrangements.map(x => x.name))]
+
+        for (let pathName of uniquePathNames) {
+            const arrangementsWithPathName = arrangements.filter(x => x.name === pathName)
+            if (arrangementsWithPathName.length <= 1) continue
+
+            for (let i = 0; i < arrangementsWithPathName.length; i++) {
+                arrangementsWithPathName[i].name += ` ${i + 1}`
+            }
         }
     }
 
