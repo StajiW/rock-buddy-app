@@ -100,29 +100,62 @@ function selectArrangement(chosenArrangement: ArrangementData) {
     <div id='loadingScores' v-if='loadingScores'>Loading scores<span class='Ellipsis' /></div>
     <div id='noScores' v-else-if='noScores'>No scores for this path have been recorded yet :(</div>
     <div id='scores' v-else>
-        <div class='Score First'>
-            <div class='Placement'>1</div>
-            <div>{{  scores[0].username  }} <div id='crown' /></div>
-            <div class='Gap' />
-            <div>{{ (Math.round(scores[0].mastery * 10000) / 100).toFixed(2) }}%</div>
+        <div id='topScore' v-if='scores[0].verified'>
+            <div class='Score First' >
+                <div class='Placement'>1</div>
+                <div>{{  scores[0].username  }} <div id='crown' /></div>
+                <div class='Gap' />
+                <div>{{ (Math.round(scores[0].mastery * 10000) / 100).toFixed(2) }}%</div>
+            </div>
+
+            <div id='secondaryInfo'>
+                <div class='PlayCount'>Play Count: {{ scores[0].play_count || 'unknown' }}</div>
+                <div class='LastPlayed'>Last Played: {{ scores[0].last_played || 'unknown' }}</div>
+                <div class='Streak'>Streak: {{ scores[0].streak }}</div>
+            </div>
         </div>
 
-        <div id='secondaryInfo'>
-            <div class='Streak'>Streak: {{ scores[0].streak }}</div>
-            <div class='PlayCount'>Play Count: {{ scores[0].play_count || 'unknown' }}</div>
-            <div class='LastPlayed'>Last Played: {{ scores[0].last_played || 'unknown' }}</div>
-        </div>
-
-        <div id='lowerScores' v-if='scores.length > 1'>
-            <div class='Score' v-for='(score, i) in scores.slice(1)'>
+        <div id='lowerScores' v-if='scores.length > 1 || !scores[0].verified'>
+            <div class='Score' v-if='scores[1]?.verified'>
+                <div class='Placement'></div>
+                <div class='Username'></div>
+                <div class='Gap' />
+                <div class='PlayCount'>Count</div>
+                <div class='Streak'>Streak</div>
+                <div class='Mastery'>Accuracy</div>
+            </div>
+            <div class='Score Verified' v-for='(score, i) in scores.slice(1).filter(x => x.verified)'>
                 <div class='Placement'>{{ i + 2 }}</div>
                 <div class='Username'>{{  score.username  }}</div>
                 <div class='Gap' />
+                <div class='PlayCount'>{{ score.play_count }}</div>
+                <div class='Streak'>{{ score.streak }}</div>
                 <div class='Mastery'>{{ (Math.round(score.mastery * 10000) / 100).toFixed(2) }}%</div>
-                <!-- <div class='Streak'>{{ score.streak }} streak</div>
-                <div class='Gap' />
-                <div class='PlayCount'>{{ score.play_count }} plays</div>
-                <div class='LastPlayed'>{{ score.last_played }}</div> -->
+            </div>
+
+
+            <div v-if='scores.filter(x => !x.verified).length > 0'>
+                <div class='Score' id='unverified' v-if='scores[1]?.verified'>
+                    Unverified Scores
+                    <div class='Gap' />
+                    <div class='Mastery'>Mastery</div>
+                </div>
+                <div class='Score' id='unverified' v-else>
+                    Unverified Scores
+                    <div class='Gap' />
+                    <div class='PlayCount'>Count</div>
+                    <div class='Streak'>Streak</div>
+                    <div class='Mastery'>Mastery</div>
+                </div>
+
+                <div class='Score' v-for='(score, i) in scores.filter(x => !x.verified)'>
+                    <div class='Placement'></div>
+                    <div class='Username'>{{  score.username  }}</div>
+                    <div class='Gap' />
+                    <div class='PlayCount'>{{ score.play_count }}</div>
+                    <div class='Streak'>{{ score.streak }}</div>
+                    <div class='Mastery'>{{ (Math.round(score.mastery * 10000) / 100).toFixed(2) }}%</div>
+                </div>
             </div>
         </div>
     </div>
@@ -220,6 +253,13 @@ function selectArrangement(chosenArrangement: ArrangementData) {
     border-radius: .25rem;
 }
 
+#topScore {
+    /* padding: .5rem; */
+
+    /* background-color: white; */
+    /* color: var(--dark-gray); */
+}
+
 .Score {
     display: flex;
     justify-content: space-between;
@@ -240,7 +280,7 @@ function selectArrangement(chosenArrangement: ArrangementData) {
 }
 
 .Score.First {
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 .Score.First .Username {
@@ -259,8 +299,8 @@ function selectArrangement(chosenArrangement: ArrangementData) {
 #crown {
     display: inline-block;
 
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
 
     transform: translateY(.25rem);
 
@@ -280,11 +320,33 @@ function selectArrangement(chosenArrangement: ArrangementData) {
     justify-content: space-between;
 }
 
-#secondaryInfo .Streak {
+#secondaryInfo .PlayCount {
     margin-left: 2.5rem;
 }
 
 #lowerScores {
     margin-top: 1rem;
+}
+
+#lowerScores .Mastery {
+    width: 6rem;
+    text-align: right;
+}
+
+#lowerScores .Streak {
+    width: 5em;
+    text-align: right;
+}
+
+#lowerScores .PlayCount {
+    width: 5rem;
+    text-align: right;
+}
+
+#unverified {
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid white;
 }
 </style>

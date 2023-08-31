@@ -24,11 +24,11 @@ onMounted(() => {
 <div id='inGame' v-if='scoreData'>
     <div id='topBar'>
         <div id='accuracy'>
-            <NumberDisplay :str="(scoreData?.accuracy === 100) ? '100%' : `${scoreData.accuracy.toFixed(2)}%`.padStart(6, '0')" :stringLength='6' />
+            {{ (scoreData?.accuracy === 100) ? '100%' : `${scoreData.accuracy.toFixed(2)}%`.padStart(6, '0') }}
         </div>
         <div id='middle'>
-            <div id='currentStreak'>Streak &nbsp;&nbsp;&nbsp;<NumberDisplay :str="scoreData.streak.toString().padStart(5, ' ')" :stringLength='5' /></div>
-            <div id='notesHit'>Notes Hit <NumberDisplay :str="scoreData.notesHit.toString().padStart(5, ' ')" :stringLength='5' /></div>
+            <div id='currentStreak'>Streak &nbsp;&nbsp;&nbsp;<NumberDisplay :str="scoreData.streak.toString().padEnd(5, ' ')" :stringLength='5' /></div>
+            <div id='notesHit'>Notes Hit <NumberDisplay :str="scoreData.notesHit.toString().padEnd(5, ' ')" :stringLength='5' /></div>
         </div>
         <div id='right'>
             <div id='highestStreak'><NumberDisplay :str="scoreData.highestStreak.toString().padStart(5, ' ')" :stringLength='5' /> Highest</div>
@@ -76,7 +76,7 @@ onMounted(() => {
     box-sizing: border-box;
     text-align: right;
 
-    border-left: 2px solid white;
+    /* border-left: 2px solid white; */
 }
 
 #currentStreak, #highestStreak {

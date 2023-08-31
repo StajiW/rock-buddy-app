@@ -42,7 +42,7 @@ const CHARACTERS = ' 0123456789.%'
     display: inline-block;
 
     transform: top;
-    transition-duration: .3s;
+    transition-duration: .2s;
 }
 
 .Digit {
