@@ -1,5 +1,5 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
-import { execFile } from 'child_process'
+import { execFile, exec } from 'child_process'
 import { release } from 'node:os'
 import { join } from 'node:path'
 import ElectronStore from 'electron-store'
@@ -120,13 +120,33 @@ ipcMain.handle('open-win', (_, arg) => {
   }
 })
 
+// https://stackoverflow.com/questions/38033127/node-js-how-to-check-a-process-is-running-by-the-process-name
+function isRunning(query, cb) {
+  let platform = process.platform;
+  let cmd = '';
+  switch (platform) {
+      case 'win32' : cmd = `tasklist`; break;
+      case 'darwin' : cmd = `ps -ax | grep ${query}`; break;
+      case 'linux' : cmd = `ps -A`; break;
+      default: break;
+  }
+  exec(cmd, (err, stdout, stderr) => {
+      cb(stdout.toLowerCase().indexOf(query.toLowerCase()) > -1);
+  });
+}
+
 ipcMain.handle('launch-rocksniffer', () => {
   return new Promise((resolve, reject) => {
-    execFile('RockSniffer.exe', [], { cwd: '..\\RockSniffer\\RockSniffer\\bin\\x64\\Release\\net6.0-windows' }, (error) => {
-      if (error) reject(error)
-    })
+    // Don't launch RockSniffer if it's already running
+    isRunning('RockSniffer.exe', (status) => {
+      if (status) return resolve(null)
 
-    // If rocksniffer doesn't terminate for 2 seconds we're just gonna assume it's working
-    setTimeout(() => resolve(null), 2000)
+      execFile('RockSniffer.exe', [], { cwd: '..\\RockSniffer\\RockSniffer\\bin\\x64\\Release\\net6.0-windows' }, (error) => {
+        if (error) return reject(error)
+      })
+  
+      // If rocksniffer doesn't terminate for 2 seconds we're just gonna assume it's working
+      setTimeout(() => resolve(null), 2000)
+    })
   })
 })

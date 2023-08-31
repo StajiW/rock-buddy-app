@@ -17,3 +17,7 @@ export class InputError extends Error {
 export class NotFoundError extends Error {
     name = 'NOT_FOUND_ERROR'
 }
+
+export class AuthError extends Error {
+    name = 'AUTH_ERROR'
+}

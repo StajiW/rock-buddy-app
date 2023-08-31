@@ -9,6 +9,15 @@ const ENDING_THRESHOLD = 0.1
 
 const STAGES_IN_SONG = ['las_game', 'nonstopplaygame', 'sa_game']
 
+export enum SnifferState {
+    Failure,
+    WaitingForSniffer,
+    WaitingForRocksmith,
+    WaitingForSongData,
+    InMenu,
+    InSong
+}
+
 export type GameData = {
     stage: string,
     ending: boolean,
@@ -18,6 +27,7 @@ export type GameData = {
 
 export type ScoreData = {
     notesHit: number,
+    notesMissed: number,
     accuracy: number,
     streak: number,
     highestStreak: number
@@ -32,7 +42,8 @@ export enum ArrangementType {
 export type ArrangementData = {
     name: string,
     type: ArrangementType,
-    totalNotes: number
+    totalNotes: number,
+    id: string
 }
 
 export type SongData = {
@@ -44,7 +55,8 @@ export type SongData = {
     year: number,
     albumCover: string,
     length: number,
-    arrangements: ArrangementData[]
+    arrangements: ArrangementData[],
+    currentArrangement?: ArrangementData    // Maybe this should be somewhere else, easy for now
 }
 
 export default class RockSniffer {
@@ -55,7 +67,8 @@ export default class RockSniffer {
     private scoreData?: ScoreData
     private gameData?: GameData
     private verifier?: ScoreVerifier
-    private inSong: boolean = false
+    // private _inSong: boolean = false
+    private _state: SnifferState = SnifferState.WaitingForSniffer
 
     public static get instance(): RockSniffer {
         if (this._instance === undefined) this._instance = new RockSniffer()
@@ -73,6 +86,12 @@ export default class RockSniffer {
         for (let c of this.callbacks[id]) c(...args)
     }
 
+    private updateState(state: SnifferState): void {
+        if (this._state === state) return
+        this._state = state
+        this.callback('stateChange', state)
+    }
+
     public async startProcess(callback: () => any): Promise<void> {
         try {
             await ipcRenderer.invoke('launch-rocksniffer')
@@ -80,6 +99,7 @@ export default class RockSniffer {
         } catch (error) {
             // TODO: Make it do something when RockSniffer doesn't load properly
             console.error(error)
+            this.updateState(SnifferState.Failure)
         }
     }
 
@@ -98,25 +118,31 @@ export default class RockSniffer {
         const memoryReadout = json.memoryReadout
         const songDetails = json.songDetails
 
-        if (memoryReadout === null) return
-        if (songDetails === null) return
+        if (memoryReadout === null) {
+            // If there's no memoryReadout Rocksmith isn't running (maybe idk if that's right)
+            this.updateState(SnifferState.WaitingForRocksmith)
+            return
+        }
+        if (songDetails === null) {
+            this.updateState(SnifferState.WaitingForSongData)
+            return
+        }
 
         this.updateGameData(memoryReadout)
 
         if (songDetails.songID !== undefined && songDetails.songID !== this.songData?.key) {
-            this.updateSongData(songDetails)
+            this.updateSongData(songDetails, memoryReadout)
             this.callback('songChange', this.songData)
         }
 
         if (this.isInSong()) {
-            if (!this.inSong) this.startSong()
+            if (this._state !== SnifferState.InSong) this.startSong()
         }
-        else if (this.inSong) this.endSong()
+        else if (this._state !== SnifferState.InMenu) this.endSong()
 
-        if (this.inSong) {
+        if (this._state === SnifferState.InSong) {
             this.updateScoreData(memoryReadout)
-            this.callback('gameUpdate', this.scoreData)
-
+            this.callback('update', this.scoreData)
 
             if (this.verifier === undefined) throw new UnexpectedError('Score verifier not instantiated')
             if (this.gameData === undefined) throw new UnexpectedError('GameData undefined')
@@ -124,7 +150,9 @@ export default class RockSniffer {
         }
     }
     
-    private updateSongData(songDetails: any): void {
+    private updateSongData(songDetails: any, memoryReadout: any): void {
+        const arrangements = this.getArrangementData(songDetails)
+
         this.songData = {
             key: songDetails.songID,
             psarcHash: songDetails.psarcFileHash,
@@ -134,7 +162,8 @@ export default class RockSniffer {
             year: songDetails.albumYear,
             albumCover: songDetails.albumArt,
             length: songDetails.songLength,
-            arrangements: this.getArrangementData(songDetails)
+            arrangements: arrangements,
+            currentArrangement: arrangements.find(x => x.id === memoryReadout.arrangementID)
         }
     }
 
@@ -152,7 +181,8 @@ export default class RockSniffer {
             return {
                 name: name,
                 type: ArrangementType[arrangement.type],
-                totalNotes: arrangement.totalNotes
+                totalNotes: arrangement.totalNotes,
+                id: arrangement.arrangementID
             }
         })
 
@@ -187,6 +217,7 @@ export default class RockSniffer {
     private updateScoreData(memoryReadout: any): void {
         this.scoreData = {
             notesHit: memoryReadout.noteData.TotalNotesHit,
+            notesMissed: memoryReadout.noteData.TotalNotesMissed,
             accuracy: memoryReadout.noteData.Accuracy,
             streak: memoryReadout.noteData.CurrentHitStreak,
             highestStreak: memoryReadout.noteData.HighestHitStreak
@@ -209,12 +240,30 @@ export default class RockSniffer {
 
     private startSong(): void {
         if (this.gameData === undefined) throw new UnexpectedError('GameData undefined')
-        this.inSong = true
+        this.updateState(SnifferState.InSong)
         this.verifier = new ScoreVerifier(this.gameData.songTimer)
     }
 
     private endSong(): void {
-        this.inSong = false
+        this.updateState(SnifferState.InMenu)
         this.verifier = undefined
+    }
+
+    public getScoreData(): ScoreData {
+        if (this.scoreData === undefined) throw new UnexpectedError('ScoreData undefined')
+        return this.scoreData
+    }
+
+    public getSongData(): SongData {
+        if (this.songData === undefined) throw new UnexpectedError('SongData undefined')
+        return this.songData
+    }
+
+    public get inSong(): boolean {
+        return this._state === SnifferState.InSong
+    }
+
+    public get state(): SnifferState {
+        return this._state
     }
 }

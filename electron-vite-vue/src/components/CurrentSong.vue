@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import RockSniffer, { SongData } from '../scripts/rocksniffer'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const rockSniffer = RockSniffer.instance
 
@@ -11,6 +11,15 @@ let year = ref(0)
 let albumCover = ref('')
 
 rockSniffer.on('songChange', (songData: SongData) => {
+    title.value = songData.title
+    artist.value = songData.artist
+    album.value = songData.album
+    year.value = songData.year
+    albumCover.value = songData.albumCover
+})
+
+onMounted(() => {
+    const songData = rockSniffer.getSongData()
     title.value = songData.title
     artist.value = songData.artist
     album.value = songData.album

@@ -1,63 +1,58 @@
 <script setup lang='ts'>
-import { Ref, ref } from 'vue'
+import { Ref, onMounted, ref } from 'vue'
 import RockSniffer, { SongData, ArrangementData } from '../scripts/rocksniffer'
 import Account from '../scripts/account'
 import { getHost } from '../scripts/util'
-import { ArrangementType } from '../scripts/rocksniffer';
-import { UnexpectedError } from '../scripts/errors';
+import { ArrangementType } from '../scripts/rocksniffer'
+import { UnexpectedError } from '../scripts/errors'
+import Leaderboard, { Score } from '../scripts/leaderboard'
 
-type Score = {
-    userId: number,
-    username: string,
-    last_played: string,
-    play_count: number,
-    streak: number,
-    mastery: number,
-    verified: boolean
-}
+
 
 const rockSniffer = RockSniffer.instance
 const account = Account.instance
+const leaderboard = Leaderboard.instance
 
 let arrangements: Ref<ArrangementData[]> = ref([])
 let arrangement: Ref<ArrangementData | undefined> = ref()
 let songData: SongData
 let scores: Ref<Score[]> = ref([])
+let loadingScores = ref(true)
 let noScores = ref(false)
+let timeout: number | undefined = undefined
 
-rockSniffer.on('songChange', async (newSongData: SongData) => {
+onMounted(() => changeSong(rockSniffer.getSongData()))
+rockSniffer.on('songChange', (newSongData: SongData) => changeSong(newSongData))
+
+function changeSong(newSongData: SongData) {
     songData = newSongData
     arrangements.value = songData.arrangements
-    arrangement.value = songData.arrangements[0] // This should pick by last selection / preference, and main paths first
+    arrangement.value = songData.arrangements[0] // This should pick by last selection / preference
 
-    updateScores()
-})
+    if (timeout !== undefined) clearTimeout(timeout)
+
+    // window.setTimeout because setTimeout on it's own doesn't return a number
+    loadingScores.value = true
+
+    timeout = window.setTimeout(() => {
+        updateScores()
+    }, 2000)
+}
 
 async function updateScores() {
-    if (!account.loggedIn) return
     if (arrangement.value === undefined) throw new UnexpectedError('arrangement undefined')
 
-    const host = getHost()
-    const res = await fetch(host + '/api/data/get_scores_las.php', {
-        method: 'POST',
-        body: JSON.stringify({
-            auth_data: account.authData,
-            song_key: songData.key,
-            psarc_hash: songData.psarcHash,
-            arrangement: ArrangementType[arrangement.value.type].toLowerCase(),
-            version: '1.1.10'
-        })
-    })
+    const newScores = await leaderboard.getScores(songData, arrangement.value.name)
 
-    const json = await res.json()
+    loadingScores.value = false
 
-    if (res.status === 400 || (Array.isArray(json) && json.length === 0)) {
+    if (newScores.length === 0) {
         noScores.value = true
         return
     }
-
+    
     noScores.value = false
-    scores.value = json
+    scores.value = newScores
 }
 
 function selectArrangementType(arrangementType: ArrangementType) {
@@ -79,24 +74,18 @@ function selectArrangement(chosenArrangement: ArrangementData) {
         <div id='arrangementTypes'>
             <!-- I hate how this looks there's probably a way to make small component functions -->
             <button class='ArrangmentType' id='lead'
-            :class='{
-                Selected: arrangement.type === ArrangementType.Lead,
-                InActive: !arrangements.some(x => x.type === ArrangementType.Lead)
-            }'
+            :class='{ Selected: arrangement.type === ArrangementType.Lead }'
+            :disabled='!arrangements.some(x => x.type === ArrangementType.Lead)'
             @click='selectArrangementType(ArrangementType.Lead)'>L</button>
 
             <button class='ArrangmentType' id='rhythm'
-            :class='{
-                Selected: arrangement.type === ArrangementType.Rhythm,
-                InActive: !arrangements.some(x => x.type === ArrangementType.Rhythm)
-            }'
+            :class='{ Selected: arrangement.type === ArrangementType.Rhythm }'
+            :disabled='!arrangements.some(x => x.type === ArrangementType.Rhythm)'
             @click='selectArrangementType(ArrangementType.Rhythm)'>R</button>
 
             <button class='ArrangmentType' id='bass'
-            :class='{
-                Selected: arrangement.type === ArrangementType.Bass,
-                InActive: !arrangements.some(x => x.type === ArrangementType.Bass)
-            }'
+            :class='{ Selected: arrangement.type === ArrangementType.Bass }'
+            :disabled='!arrangements.some(x => x.type === ArrangementType.Bass)'
             @click='selectArrangementType(ArrangementType.Bass)'>B</button>
         </div>
         <div id='arrangements'>
@@ -104,11 +93,12 @@ function selectArrangement(chosenArrangement: ArrangementData) {
             <button class='Arrangement'
             v-for='a in arrangements.filter(x => x.type === arrangement?.type)'
             :class='{ Selected: arrangement.name === a.name }'
-            @click='arrangement = a'>{{ a.name }}</button>
+            @click='selectArrangement(a)'>{{ a.name }}</button>
         </div>
     </div>
 
-    <div id='noScores' v-if='noScores'>No scores for this path have been recorded yet :(</div>
+    <div id='loadingScores' v-if='loadingScores'>Loading scores<span class='Ellipsis' /></div>
+    <div id='noScores' v-else-if='noScores'>No scores for this path have been recorded yet :(</div>
     <div id='scores' v-else>
         <div class='Score First'>
             <div class='Placement'>1</div>
@@ -195,7 +185,7 @@ function selectArrangement(chosenArrangement: ArrangementData) {
     background-color: var(--color-blue);
 }
 
-.ArrangmentType.InActive {
+.ArrangmentType:disabled {
     opacity: .5;
 
     pointer-events: none;
