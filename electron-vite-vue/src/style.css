@@ -44,3 +44,14 @@ button:focus {
     outline: 1px dashed var(--dark-gray);
     outline-offset: .25rem;
 }
+
+.Ellipsis::after {
+    animation: ellipsisAnimation 2s linear infinite;
+    content: '';
+}
+
+@keyframes ellipsisAnimation {
+    25% { content: "."; }
+    50% { content: ".."; }
+    75% { content: "..."; }
+}

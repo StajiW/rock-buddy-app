@@ -1,13 +1,21 @@
 <script setup lang='ts'>
-import { ref, Ref } from 'vue'
-import RockSniffer, { ScoreData } from '../scripts/rocksniffer'
+import { onMounted, ref, Ref } from 'vue'
+import RockSniffer, { ScoreData, SnifferState } from '../scripts/rocksniffer'
 import NumberDisplay from './NumberDisplay.vue'
+import { Score } from '../scripts/leaderboard'
 
 const rockSniffer = RockSniffer.instance
 let scoreData: Ref<ScoreData | undefined> = ref()
+let scores: Ref<Score[]> = ref([])
 
 rockSniffer.on('update', (newScoreData: ScoreData) => {
     scoreData.value = newScoreData
+})
+
+onMounted(() => {
+    if (!rockSniffer.inSong) return
+    const songData = rockSniffer.getSongData()
+    console.log(songData)
 })
 </script>
 
@@ -27,9 +35,9 @@ rockSniffer.on('update', (newScoreData: ScoreData) => {
             <div id='notesMissed'><NumberDisplay :str="scoreData.notesMissed.toString().padStart(5, ' ')" :stringLength='5' /> &nbsp;Missed</div>
         </div>
     </div>
-    <div id='bottomBar'>
-        
-    </div>
+    <!-- <div id='bottomBar'>
+
+    </div> -->
 </div>
 </template>
 
@@ -49,7 +57,7 @@ rockSniffer.on('update', (newScoreData: ScoreData) => {
 }
 
 #topBar {
-    margin-bottom: 1rem;
+    /* margin-bottom: 1rem; */
 }
 
 #accuracy {
