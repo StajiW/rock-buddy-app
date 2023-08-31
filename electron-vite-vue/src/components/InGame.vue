@@ -1,22 +1,63 @@
 <script setup lang='ts'>
-import { onMounted, ref, Ref } from 'vue'
-import RockSniffer, { ScoreData, SnifferState } from '../scripts/rocksniffer'
+import { onMounted, ref, Ref, TransitionGroup, reactive } from 'vue'
+import RockSniffer, { ScoreData } from '../scripts/rocksniffer'
+import Leaderboard from '../scripts/leaderboard'
 import NumberDisplay from './NumberDisplay.vue'
 import { Score } from '../scripts/leaderboard'
 
 const rockSniffer = RockSniffer.instance
+const leaderboard = Leaderboard.instance
 let scoreData: Ref<ScoreData | undefined> = ref()
-let scores: Ref<Score[]> = ref([])
+let scores: Score[]
+
+// Durr
+const USERNAME = 'Staji'
+const USER_ID = 13
 
 rockSniffer.on('update', (newScoreData: ScoreData) => {
     scoreData.value = newScoreData
+    if (scores === undefined) return
+    const score = scores.find(score => score.username === USERNAME)!
+    score.mastery = newScoreData.accuracy / 100
+    score.streak = newScoreData.streak
+    scores.sort(sortScores)
 })
 
-onMounted(() => {
+onMounted(async () => {
     if (!rockSniffer.inSong) return
+
     const songData = rockSniffer.getSongData()
-    console.log(songData)
+
+    const verifiedScores = (await leaderboard.getScores(songData, songData.currentArrangement!.name)).filter((score) => {
+        return score.verified && score.username !== USERNAME
+    })
+
+    verifiedScores.push({
+        userId: USER_ID,
+        username: USERNAME,
+        streak: 0,
+        last_played: '',
+        play_count: 0,
+        mastery: 1,
+        verified: true
+    })
+
+    verifiedScores.sort(sortScores)
+
+    scores = reactive(verifiedScores)
 })
+
+function sortScores(a: Score, b: Score) {
+    if (a.mastery !== b.mastery) return b.mastery - a.mastery
+    return b.streak - a.streak
+}
+
+function getScoresOffset(): number {
+    const offset = scores.findIndex((score) => score.username === USERNAME) - 2
+    if (offset < 0) return 0
+    if (offset > scores.length - 1) return scores.length - 1
+    return offset
+}
 </script>
 
 <template>
@@ -35,9 +76,19 @@ onMounted(() => {
             <div id='notesMissed'><NumberDisplay :str="scoreData.notesMissed.toString().padStart(5, ' ')" :stringLength='5' /> &nbsp;Missed</div>
         </div>
     </div>
-    <!-- <div id='bottomBar'>
-
-    </div> -->
+    <div id='leaderboard' v-if='scores?.length > 1'>
+        <div id='scores' :style='{ top: `-${getScoresOffset() * 1.25 + 0.5}rem` }'>
+            <TransitionGroup name='scores'>
+                <div class='Score' v-for='(score, i) in scores' :key='score.username'>
+                    <div class='Placement'>{{ i + 1 }}</div>
+                    <div class='Username'>{{ score.username }}</div>
+                    <div class='Gap' />
+                    <div class='Streak'>{{ score.streak }}</div>
+                    <div class='Accuracy'>{{ (Math.round(score.mastery * 10000) / 100).toFixed(2) }}%</div>
+                </div>
+            </TransitionGroup>
+        </div>
+    </div>
 </div>
 </template>
 
@@ -99,5 +150,44 @@ onMounted(() => {
 
 .NumberDisplay:deep(.Digit) {
     height: 1.5rem;
+}
+
+.scores-move {
+  transition: all .3s;
+}
+
+#leaderboard {
+    position: relative;
+
+    /* width: 100%; */
+    height: 4rem;
+    padding: .5rem;
+
+    overflow: hidden;
+}
+
+#scores {
+    position: relative;
+
+    transform: top;
+    transition-duration: .3s;
+}
+
+.Score {
+    height: 1.25rem;
+    display: flex;
+}
+
+.Placement {
+    width: 1.5rem;
+}
+
+.Gap {
+    flex-grow: 1;
+}
+
+.Accuracy {
+    width: 5rem;
+    text-align: right;
 }
 </style>
