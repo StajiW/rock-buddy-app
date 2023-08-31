@@ -23,10 +23,18 @@ rockSniffer.on('stateChange', (state: SnifferState) => {
     <InGame      v-if='snifferState === SnifferState.InSong'/>
     <Leaderboard v-if='snifferState === SnifferState.InMenu'/>
 </div>
-
 </template>
 
 <style scoped>
+.NumberDisplay {
+    height: 3rem;
+    font-size: 3rem;
+}
+
+.NumberDisplay:deep(.Digit) {
+    height: 3rem;
+}
+
 #currentSong {
     margin-bottom: 1rem;
 }
