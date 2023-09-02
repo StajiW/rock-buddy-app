@@ -13,6 +13,18 @@ export type Score = {
     verified: boolean
 }
 
+export type Ranking = {
+    username: string,
+    points: number
+}
+
+export type TopRankings = {
+    overall: Ranking[]
+    lead: Ranking[],
+    rhythm: Ranking[],
+    bass: Ranking[]
+}
+
 export default class Leaderboard {
     private static _instance: Leaderboard
     private account: Account = Account.instance
@@ -45,5 +57,22 @@ export default class Leaderboard {
         }
 
         return json
+    }
+
+    public async getRankings(): Promise<TopRankings> {
+        if (!this.account.loggedIn) throw new AuthError('User not logged in')
+
+        const host = getHost()
+        const res = await fetch(host + '/api/data/get_ranks.php', {
+            method: 'POST',
+            body: JSON.stringify({
+                auth_data: this.account.authData,
+                version: '1.1.10'
+            })
+        })
+
+        const json = await res.json()
+
+        return json as TopRankings
     }
 }

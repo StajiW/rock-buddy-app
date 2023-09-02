@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, ref, Ref, TransitionGroup, reactive } from 'vue'
-import RockSniffer, { ScoreData } from '../scripts/rocksniffer'
+import RockSniffer, { GameData, ScoreData } from '../scripts/rocksniffer'
 import Leaderboard from '../scripts/leaderboard'
 import NumberDisplay from './NumberDisplay.vue'
 import { Score } from '../scripts/leaderboard'
@@ -76,7 +76,7 @@ function getScoresOffset(): number {
             <div id='notesMissed'><NumberDisplay :str="scoreData.notesMissed.toString().padStart(5, ' ')" :stringLength='5' /> &nbsp;Missed</div>
         </div>
     </div>
-    <div id='leaderboard' v-if='scores?.length > 1'>
+    <!-- <div id='leaderboard' v-if='scores?.length > 1'>
         <div id='scores' :style='{ top: `-${getScoresOffset() * 1.25 + 0.5}rem` }'>
             <TransitionGroup name='scores'>
                 <div class='Score' v-for='(score, i) in scores' :key='score.username'>
@@ -88,7 +88,10 @@ function getScoresOffset(): number {
                 </div>
             </TransitionGroup>
         </div>
-    </div>
+    </div> -->
+    <div>paused1 {{ scoreData.paused1 ? 'true' : 'false' }}</div>
+    <div>paused2 {{ scoreData.paused2 ? 'true' : 'false' }}</div>
+    <div>paused3 {{ scoreData.paused3 ? 'true' : 'false' }}</div>
 </div>
 </template>
 

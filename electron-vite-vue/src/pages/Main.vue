@@ -1,9 +1,10 @@
 <script setup lang='ts'>
-import { Ref, ref } from 'vue'
+import { Ref, onMounted, ref } from 'vue'
 import CurrentSong from '../components/CurrentSong.vue'
 import InGame from '../components/InGame.vue'
 import Leaderboard from '../components/Leaderboard.vue'
 import RockSniffer, { SnifferState } from '../scripts/rocksniffer'
+import Rankings from './Rankings.vue'
 
 const rockSniffer = RockSniffer.instance
 
@@ -23,6 +24,7 @@ rockSniffer.on('stateChange', (state: SnifferState) => {
     <InGame      v-if='snifferState === SnifferState.InSong'/>
     <Leaderboard v-if='snifferState === SnifferState.InMenu'/>
 </div>
+<!-- <Rankings /> -->
 </template>
 
 <style scoped>

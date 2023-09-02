@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "electron-fetch": "^1.9.1",
+    "memoryjs": "^3.5.1",
     "vue-router": "^4.2.4"
   }
 }

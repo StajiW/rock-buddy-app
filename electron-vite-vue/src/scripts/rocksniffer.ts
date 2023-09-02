@@ -7,7 +7,7 @@ const SNIFFER_HOST = 'http://localhost:9002'
 const REFRESH_RATE = 200
 const ENDING_THRESHOLD = 0.1
 
-const STAGES_IN_SONG = ['las_game', 'nonstopplaygame', 'sa_game']
+const STAGES_IN_SONG = ['las_game', 'nonstopplaygame', 'sa_game', 'sa_pause']
 
 export enum SnifferState {
     Failure,
@@ -30,7 +30,10 @@ export type ScoreData = {
     notesMissed: number,
     accuracy: number,
     streak: number,
-    highestStreak: number
+    highestStreak: number,
+    paused1: boolean,
+    paused2: boolean,
+    paused3: boolean
 }
 
 export enum ArrangementType {
@@ -220,7 +223,10 @@ export default class RockSniffer {
             notesMissed: memoryReadout.noteData.TotalNotesMissed,
             accuracy: memoryReadout.noteData.Accuracy,
             streak: memoryReadout.noteData.CurrentHitStreak,
-            highestStreak: memoryReadout.noteData.HighestHitStreak
+            highestStreak: memoryReadout.noteData.HighestHitStreak,
+            paused1: memoryReadout.paused1,
+            paused2: memoryReadout.paused2,
+            paused3: memoryReadout.paused3,
         }
     }
 
