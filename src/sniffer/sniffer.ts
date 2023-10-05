@@ -3,6 +3,7 @@ import { Rocksniffer } from './rocksniffer';
 import { UserData } from '../common/user_data';
 import { showError, showExclusive } from './functions';
 import { approxEqual, buildValidSemver, durationString, getAvailablePaths, logMessage, post } from '../common/functions';
+import SoundEffect from '../sound_effect/sound_effect';
 
 enum VerificationState {
     None,
@@ -20,6 +21,7 @@ export class Sniffer {
 
     private readonly _rocksmith: Rocksmith;
     private readonly _rocksniffer: Rocksniffer;
+    private readonly _soundEffect: SoundEffect = new SoundEffect();
 
     // Prevent duplicate refreshes
     private _refreshActive: boolean = false;
@@ -289,6 +291,7 @@ export class Sniffer {
             this.updateSongInfo(rocksnifferData);
             this.updateLiveFeed(rocksnifferData);
             this.updatePath(rocksnifferData);
+            this._soundEffect.update(rocksnifferData.memoryReadout.noteData?.TotalNotesMissed);
 
             // Monitor progress
             await this.monitorProgress(rocksnifferData);
